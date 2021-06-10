@@ -1,9 +1,9 @@
 import requests
 import json
-from typing import List, Tuple
+from typing import List
 import datetime
 
-def get_top_cryptoccy_by_market_cap(n:int = 20) -> Tuple[list, List[str]]:
+def get_top_cryptoccy_by_market_cap(n:int = 20) -> List[list]:
     """
     params:
         n - number of top crypto currencies by market cap to be extracted
@@ -28,7 +28,10 @@ def get_top_cryptoccy_by_market_cap(n:int = 20) -> Tuple[list, List[str]]:
     
     for item in res_json.get('data'):
         pair = item.get('s')
-        if pair[-4:] != 'USDT':
+        if pair:
+            if pair[-4:] != 'USDT':
+                continue
+        else:
             continue
             
         ticker = item.get('b')
@@ -40,14 +43,16 @@ def get_top_cryptoccy_by_market_cap(n:int = 20) -> Tuple[list, List[str]]:
             continue
         
         market_cap = supply*current_price
-        crypto_ccys.append([ticker, market_cap])
+        crypto_ccys.append([ticker, market_cap, supply])
         
         # Python's default sorting should work not that bad for this case. 
         crypto_ccys = sorted(crypto_ccys, key = lambda x:x[1], reverse = True)[:n]
     
-    # Returning full data - with the market cap included in the format of a nested list.
+    # Returning full data - with the market cap and supply included included in the format of a nested list.
+    # Supply can be accessed and worked with further so that we calculate market cap using different prices.
     # Also returning the cryptocurrencies names only in list format, so that can be passed easily further
-    return crypto_ccys, [x[0] for x in crypto_ccys]
+    # return crypto_ccys, [x[0] for x in crypto_ccys]
+    return crypto_ccys
 
 
 def fix_time(epoch_num:int) -> str:
