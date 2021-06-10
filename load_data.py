@@ -4,7 +4,7 @@ import requests
 from generic_helpers import fix_time
 from typing import List
 
-def load_data(cryptos:List[str], 
+def load_data(cryptos:List[list], 
                start:str, 
                end:str, 
                frequency:str = '1d', 
@@ -12,7 +12,7 @@ def load_data(cryptos:List[str],
                file_name:str = 'binance_data.json') -> dict:
     """
     params:
-        cryptos - list of crypto currencies to extract data for
+        cryptos - dictionary of crypto currencies to extract data for, together with their market cap and supply
         start - begin of interval, in format YYYY-MM-DD
         end - end of interval, in format YYYY-MM-DD
         frequency - frequency to extract the data for, eg. every 1d, 1h, etc.
@@ -59,11 +59,14 @@ def load_data(cryptos:List[str],
     start = int(datetime.datetime(int(start[0]),int(start[1]),int(start[2])).timestamp()*1000)
 
     # This is as of the time of dev of this function
-    if datetime.datetime(int(end[0]),int(end[1]),int(end[2])) > datetime.datetime(2021, 6, 5):
-        raise ValueError('Invalid end date provided. Start date must be <= 2021-05-31!')
+    if datetime.datetime(int(end[0]),int(end[1]),int(end[2])) > datetime.datetime(2021, 6, 10):
+        raise ValueError('Invalid end date provided. Start date must be <= 2021-06-10!')
     end = int(datetime.datetime(int(end[0]),int(end[1]),int(end[2])).timestamp()*1000)
     
-    for ccy in cryptos:
+    # Iteration over the cryptocurrencies only. 
+    # From the input date we need to access later the supply to get the monthly market cap,
+    # but this can be done directly with hitting the value by index.
+    for i, ccy in enumerate([x[0] for x in cryptos]):
         staging_ds = dict()
         params = {
             'symbol': ccy+'USDT',
@@ -83,6 +86,10 @@ def load_data(cryptos:List[str],
         for d in data:
             datestamp = fix_time(d[0])
             staging_ds[datestamp] = d[1::]
+            supply = float(cryptos[i][2])
+            price = float(d[4])
+            market_cap = price * supply 
+            staging_ds[datestamp].append(market_cap)
         
         # Finally add the data for this crypto ccy in the dictionary
         dataset[ccy] = staging_ds
