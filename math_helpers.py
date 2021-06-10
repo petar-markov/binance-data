@@ -132,3 +132,24 @@ def correlation(xs: List[float], ys: List[float]) -> float:
     else:
         # if no variation, correlation is zero
         return 0
+
+def rankdata(l: List[float]) -> List[float]:
+    """
+    Rank data based on a numeric list provided. 
+    This handles duplicates using an average method. 
+    """
+    if not l: return []
+    if len(l) == 1: return [1]
+    l_sorted = sorted(l)
+    l_ranked = [None] * len(l)
+    
+    for idx in range(len(l)):
+        if l.count(l[idx]) == 1:
+            l_ranked[l.index(l[idx])] = l_sorted.index(l[idx])+1
+            continue
+
+        xsum = sum([i+1 for i in range(len(l_sorted)) if l_sorted[i] == l[idx]])
+        xlen = len([i for i in range(len(l_sorted)) if l_sorted[i] == l[idx]])
+        l_ranked[idx] = xsum/xlen
+        
+    return l_ranked
